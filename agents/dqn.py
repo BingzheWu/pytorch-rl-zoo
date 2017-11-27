@@ -55,5 +55,28 @@ class DQNAgent(Agent):
         self.training = True
         self._reset_training_loggings()
         self.start_time = time.time()
-        
+        self.step = 0
+        nepisodes = 0
+        nepisodes_solved = 0
+        episode_steps = None
+        episode_reward = None
+        total_reward = 0.
+        should_start_new = True
+        while self.step < self.steps:
+            if should_start_new:
+                episode_steps = 0
+                episode_reward = 0.
+
+                self._reset_states()
+                self.experience = self.env.reset()
+                assert self.experience.state1 is not None
+                if not self.training:
+                    if self.visualize: self.env.visual()
+                    if self.render: self.env.render()
+                should_start_new = False
+            
+            action = self._forward(self.experience.state1)
+            reward = 0.
+
+            
         
