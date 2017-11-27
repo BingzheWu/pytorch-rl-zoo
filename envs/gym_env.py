@@ -1,5 +1,9 @@
 from env import Env
 import gym
+import sys
+import random
+sys.path.append('../')
+from utils.options import EnvParams
 class GymEnv(Env):
     def __init__(self, args, env_ind = 0):
         super(GymEnv, self).__init__(args, env_ind)
@@ -31,3 +35,17 @@ class GymEnv(Env):
         else:
             self.exp_state1, self.exp_reward, self.exp_terminal1,_ = self.env.step(self.actions[self.exp_action])
         return self._get_experience()
+
+def test():
+    args = EnvParams()
+    print(args.game)
+    print(args.env_type)
+    test_env = GymEnv(args)
+    print(test_env.mode)
+    test_env.env.reset()
+    for _ in range(1000):
+        test_env.render()
+        action_idx = random.randint(0,2)
+        test_env.step(action_idx)
+if __name__ == '__main__':
+    test()

@@ -7,8 +7,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from utils.helpers import loggerConfig
-from optims.sharedAdam import SharedAdam
-from optims.sharedRMSprop import SharedRMSprop
+#from optims.sharedAdam import SharedAdam
+#from optims.sharedRMSprop import SharedRMSprop
 
 CONFIGS = [
 # agent_type, env_type,    game,                       model_type,     memory_type
@@ -168,10 +168,10 @@ class AgentParams(Params):  # hyperparameters for drl agents
             # self.optim          = optim.RMSprop
         elif self.agent_type == "a3c":
             self.value_criteria = nn.MSELoss()
-            self.optim          = SharedAdam    # share momentum across learners
+           # self.optim          = SharedAdam    # share momentum across learners
         elif self.agent_type == "acer":
             self.value_criteria = nn.MSELoss()
-            self.optim          = SharedRMSprop # share momentum across learners
+            #self.optim          = SharedRMSprop # share momentum across learners
         else:
             self.value_criteria = F.smooth_l1_loss
             self.optim          = optim.Adam

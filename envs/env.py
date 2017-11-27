@@ -1,7 +1,9 @@
 import numpy as numpy
 from copy import deepcopy
-from utils.helper import Experience
 from gym.spaces.box import Box
+import sys
+sys.path.append('../')
+from utils.helpers import Experience
 class Env(object):
     def __init__(self, args, env_ind = 0):
         self.logger = args.logger
