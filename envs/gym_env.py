@@ -44,8 +44,9 @@ def test():
     print(test_env.mode)
     test_env.env.reset()
     for _ in range(1000):
-        test_env.render()
+        #test_env.render()
         action_idx = random.randint(0,2)
-        test_env.step(action_idx)
+        x = test_env.step(action_idx)
+        print(type(x))
 if __name__ == '__main__':
     test()
