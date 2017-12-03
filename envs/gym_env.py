@@ -25,9 +25,17 @@ class GymEnv(Env):
         return self.env.observation_space.shape[0]
     def render(self):
         if self.mode == 2:
-            pass
+            frame = self.env.render(mode = 'rgb_array')
+            frame_name = self.img_dir + "frame_%04d.jpg" % self.frame_ind
+            self.imsave(frame_name, frame)
+            slef.frame_ind += 1
+            return frame
         else:
             return self.env.render()
+    def reset(self):
+        self._reset_experience()
+        self.exp_state1 = self.env.reset()
+        return self._get_experience()
     def step(self, action_index):
         self.exp_action = action_index
         if self.enable_continuous:
@@ -44,7 +52,7 @@ def test():
     print(test_env.mode)
     test_env.env.reset()
     for _ in range(1000):
-        #test_env.render()
+        test_env.render()
         action_idx = random.randint(0,2)
         x = test_env.step(action_idx)
         print(type(x))

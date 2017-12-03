@@ -4,7 +4,7 @@ import warnings
 import random
 from utils.helper import Experience
 
-def sample_batch_index(low, high, size):
+def sample_batch_indexes(low, high, size):
     if high-low >=size:
         try:
             r = xrange(low, high)
@@ -25,6 +25,26 @@ def zeroed_observation(observation):
         return out
     else:
         return 0
+class RingBuffer(object):
+    def __init__(self, maxlen):
+        self.maxlen = maxlen
+        self.start = 0
+        self.length = 0
+        self.data = [None for _  in range(maxlen)]
+    def __len__(self):
+        return self.length
+    def __getitem__(self, idx):
+        if idx < 0 or idx >= self.length:
+            raise KeyError()
+        return self.data[(self.satrt+idx)%self.maxlen]
+    def append(self, v):
+        if self.length < self.maxlen:
+            self.length +=1
+        elif self.length == self.maxlen:
+            self.start = (self.start+1)%self.maxlen
+        else:
+            raise RuntimeError()
+        self.data[(self.start+self.length-1)%self.maxlen] = v
 class Memory(object):
     def __init__(self, window_length, ignore_episode_boundaries = False):
         self.window_length = window_length
@@ -48,3 +68,10 @@ class Memory(object):
             state.insert(0, self.recent_observations[current_idx])
         while(len(state)< self.window_length):
             state.insert(0, zeroed_observation(state[0]))
+        return state
+    def get_config(self):
+        config = {
+            'window_length': self.window_length,
+            'ignore_episode_boundaries': self.ignore_episode_boundaries,
+        }
+        return config

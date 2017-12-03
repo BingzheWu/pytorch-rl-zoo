@@ -75,7 +75,18 @@ class DQNAgent(Agent):
             td_error_vb = Variable(td_error_vb.data)
         return next_max_q_values_vb.clone().mean(), td_error_vb
     def _epsilon_greedy(self, q_values_ts):
-        pass
+        if self.training:
+            self.eps = self.eps_end + max(0, (self.eps_start-self.eps_end)*(self.eps_decay-max(0,self.step - self.learn_start))/ self.eps_decay)
+        else:
+            self.eps = self.eps_eval
+        if np.random.uniform() < self.eps:
+            action = random.randrange(self.action_dim)
+        else:
+            if self.use_cuda:
+                action = np.argmax(q_values_ts.cpu().numpy())
+            else:
+                action = np.argmax(q_values_ts.numpy())
+        return action
     def _forward(self, observation):
         state = self.memory.get_recent_state(observation)
         state_ts = torch.from_numpy(np.array(state)).unsqueeze(0).type(self.dtype)
@@ -184,8 +195,64 @@ class DQNAgent(Agent):
                 self.training = True
                 self.logger.warning("Resume Training @ Step: " + str(self.step))
                 should_start_new = True
-        def _eval_model(self):
-            pass
+    def _eval_model(self):
+        self.training = False
+        eval_step = 0
+
+        eval_nepisodes = 0
+        eval_nepisodes_solved = 0
+        eval_episode_steps = None
+        eval_episode_steps_log = []
+        eval_episode_reward = None
+        eval_episode_reward_log = []
+        eval_should_start_new = True
+        while eval_step < self.eval_steps:
+            if eval_should_start_new:
+                eval_episode_steps = 0
+                eval_episode_reward = 0.
+
+                self._reset_states()
+                self.experience = self.env.reset()
+                assert self.experience.state1
+                if not self.training:
+                    if self.visualize: self.env.visual()
+                    if self.render: self.env.render()
+                eval_should_start_new = False
+            eval_action = self._forward(self.experience.state1)
+            eval_reward = 0.
+            for _ in range(self.action_repetition):
+                self.experience = self.env.step(eval_action)
+                eval_reward += self.experience.reward
+                if self.experience.terminal1:
+                    eval_should_start_new = True
+                    break
+            if self.early_stop and (eval_episode_steps+1) >= self.early_stop or (eval_step+1) == self.eval_steps:
+                eval_should_start_new = True
+            if eval_should_start_new:
+                self._backward(eval_reward, True)
+            else:
+                self._backward(eval_reward, self.experience.terminal1)
+            eval_episode_steps += 1
+            eval_episode_reward += eval_reward
+            eval_step += 1
+            if eval_should_start_new:
+                self._forward(self.experience.state1)
+                self._backward(0., False)
+                eval_nepisodes += 1
+                if self.experience.terminal1:
+                    eval_nepisodes_solved += 1
+                eval_episode_steps_log.append([eval_episode_steps])
+                eval_episode_reward_log.append([eval_episode_reward])
+                self._reset_states()
+                eval_episode_steps = None
+                eval_episode_reward = None
+        v_avg, tderr_avg_vb = self._compute_validation_stats()
+        self.v_avg_log.append([self.step, v_avg])
+        self.tderr_avg_log.append([self.step, tderr_avg_vb.data.clone().mean()])
+        self.steps_avg_log.append([self.step])
+        self._save_model(self.step, self.reward_avg_log[-1][1])
+
+
 
 
         

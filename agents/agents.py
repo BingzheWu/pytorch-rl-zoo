@@ -1,6 +1,8 @@
 import torch
 import torch.optim as optim
-
+import sys
+sys.path.append('../')
+from utils.helpers import Experience
 class Agent(object):
     def __init__(self, args, env_prototype, model_prototype, memory_prototype,):
         self.logger = args.logger
